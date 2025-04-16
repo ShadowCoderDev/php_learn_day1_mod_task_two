@@ -15,22 +15,29 @@ use App\Http\Controllers\api\ApiController;
 |
 */
 
-// Public routes 
+// مسیرهای عمومی - نیازی به احراز هویت ندارند
 Route::post("register", [ApiController::class, "register"]);
 Route::post("login", [ApiController::class, "login"]);
 
-// Protected routes 
-Route::middleware('auth:api')->group(function () {
+// مسیرهای محافظت شده - نیاز به احراز هویت دارند
+Route::middleware(['auth:api', 'api.token'])->group(function () {
     Route::post("refresh-token", [ApiController::class, "refreshToken"]);
     Route::get("profile", [ApiController::class, "profile"]);
     Route::post("logout", [ApiController::class, "logout"]);
     
-    // Admin only routes 
+    // مسیرهای مخصوص مدیر - نیاز به نقش مدیر دارند
     Route::middleware('admin')->group(function () {
+        // افزودن مسیرهای مخصوص مدیر در اینجا
+        Route::get("admin-test", function() {
+            return response()->json([
+                'status' => true,
+                'message' => 'شما دسترسی مدیر دارید'
+            ]);
+        });
     });
 });
 
-// Fallback route 
+// مسیر پیش‌فرض - تمام مسیرهای ناموجود را می‌گیرد
 Route::fallback(function(){
     return response()->json([
         'status' => false,

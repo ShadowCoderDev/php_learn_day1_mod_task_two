@@ -270,13 +270,7 @@ class ApiController extends Controller
      */
     public function logout(Request $request){
         try {
-            // بررسی احراز هویت کاربر
-            if (!auth()->check()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'توکن معتبر نیست یا ارائه نشده است'
-                ], 401);
-            }
+          
             
             $user = auth()->user();
             $user->token()->revoke();
@@ -335,13 +329,7 @@ class ApiController extends Controller
      */
     public function profile(Request $request){
         try {
-            // بررسی احراز هویت کاربر
-            if (!auth()->check()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'توکن معتبر نیست یا ارائه نشده است'
-                ], 401);
-            }
+            
             
             // دریافت کاربر
             $user = auth()->user();
@@ -405,13 +393,7 @@ class ApiController extends Controller
      */
     public function refreshToken(Request $request){
         try {
-            // بررسی احراز هویت کاربر
-            if (!auth()->check()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'توکن معتبر نیست یا ارائه نشده است'
-                ], 401);
-            }
+            
             
             $user = auth()->user();
             $token = $user->createToken('myToken')->accessToken;

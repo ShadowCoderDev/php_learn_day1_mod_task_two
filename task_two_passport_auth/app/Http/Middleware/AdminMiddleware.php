@@ -15,13 +15,18 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check() && auth()->user()->role === 'admin') {
-            return $next($request);
+        // اگر کاربر احراز هویت نشده است یا نقش آن مدیر نیست
+        if (!auth()->check() || auth()->user()->role !== 'admin') {
+            return response()->json([
+                'status' => false,
+                'message' => 'دسترسی محدود. تنها مدیران مجاز به دسترسی هستند.',
+                'type' => auth()->check() ? 'type2' : null  // نوع کاربر را برمی‌گرداند (اگر احراز هویت شده باشد)
+            ], 403);
         }
         
-        return response()->json([
-            'status' => false,
-            'message' => 'دسترسی محدود. تنها مدیران مجاز به دسترسی هستند.'
-        ], 403);
+        // نوع کاربر را به درخواست اضافه می‌کنیم
+        $request->attributes->add(['user_type' => 'type1']);
+        
+        return $next($request);
     }
 }
