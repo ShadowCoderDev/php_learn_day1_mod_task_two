@@ -1,0 +1,444 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "سیستم احراز هویت API",
+        "description": "نقاط پایانی API برای مدیریت و احراز هویت کاربران",
+        "contact": {
+            "name": "پشتیبانی API",
+            "email": "admin@example.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://my-default-host.com",
+            "description": "سرور API"
+        }
+    ],
+    "paths": {
+        "/api/register": {
+            "post": {
+                "tags": [
+                    "احراز هویت"
+                ],
+                "summary": "ثبت نام کاربر جدید",
+                "description": "ایجاد حساب کاربری جدید با اطلاعات ارائه شده",
+                "operationId": "registerUser",
+                "requestBody": {
+                    "description": "اطلاعات ثبت نام کاربر",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserRegisterRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "کاربر با موفقیت ثبت نام شد",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "خطای اعتبارسنجی",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "داده های ارائه شده نامعتبر است."
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "این ایمیل قبلا ثبت شده است."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "احراز هویت"
+                ],
+                "summary": "ورود کاربر",
+                "description": "احراز هویت کاربر و ارائه توکن دسترسی",
+                "operationId": "loginUser",
+                "requestBody": {
+                    "description": "اطلاعات ورود کاربر",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "کاربر با موفقیت وارد شد",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TokenResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "غیرمجاز - اطلاعات نامعتبر",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "tags": [
+                    "احراز هویت"
+                ],
+                "summary": "خروج کاربر",
+                "description": "لغو توکن دسترسی کاربر",
+                "operationId": "logoutUser",
+                "responses": {
+                    "200": {
+                        "description": "کاربر با موفقیت خارج شد",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SuccessResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "احراز هویت نشده",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "احراز هویت نشده."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/profile": {
+            "get": {
+                "tags": [
+                    "کاربر"
+                ],
+                "summary": "دریافت پروفایل کاربر",
+                "description": "اطلاعات پروفایل کاربر احراز هویت شده را برمی‌گرداند",
+                "operationId": "getUserProfile",
+                "responses": {
+                    "200": {
+                        "description": "پروفایل کاربر با موفقیت دریافت شد",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserProfileResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "احراز هویت نشده",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "احراز هویت نشده."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/refresh-token": {
+            "post": {
+                "tags": [
+                    "احراز هویت"
+                ],
+                "summary": "تازه‌سازی توکن دسترسی",
+                "description": "صدور یک توکن دسترسی جدید برای کاربر احراز هویت شده",
+                "operationId": "refreshToken",
+                "responses": {
+                    "200": {
+                        "description": "توکن با موفقیت تازه‌سازی شد",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
+                                        },
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "توکن با موفقیت تازه‌سازی شد"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "احراز هویت نشده",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "احراز هویت نشده."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "User": {
+                "required": [
+                    "name",
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "id": {
+                        "description": "شناسه کاربر",
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "name": {
+                        "description": "نام کاربر",
+                        "type": "string"
+                    },
+                    "email": {
+                        "description": "ایمیل کاربر",
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "created_at": {
+                        "description": "تاریخ ایجاد",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "description": "تاریخ آخرین بروزرسانی",
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "UserRegisterRequest": {
+                "required": [
+                    "name",
+                    "email",
+                    "password",
+                    "password_confirmation"
+                ],
+                "properties": {
+                    "name": {
+                        "description": "نام کاربر",
+                        "type": "string",
+                        "example": "محمد حسن"
+                    },
+                    "email": {
+                        "description": "ایمیل کاربر",
+                        "type": "string",
+                        "format": "email",
+                        "example": "user@example.com"
+                    },
+                    "password": {
+                        "description": "رمز عبور کاربر",
+                        "type": "string",
+                        "format": "password",
+                        "example": "Password123"
+                    },
+                    "password_confirmation": {
+                        "description": "تایید رمز عبور",
+                        "type": "string",
+                        "format": "password",
+                        "example": "Password123"
+                    }
+                },
+                "type": "object"
+            },
+            "LoginRequest": {
+                "required": [
+                    "email",
+                    "password"
+                ],
+                "properties": {
+                    "email": {
+                        "description": "ایمیل کاربر",
+                        "type": "string",
+                        "format": "email",
+                        "example": "user@example.com"
+                    },
+                    "password": {
+                        "description": "رمز عبور کاربر",
+                        "type": "string",
+                        "format": "password",
+                        "example": "Password123"
+                    }
+                },
+                "type": "object"
+            },
+            "SuccessResponse": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "عملیات با موفقیت انجام شد"
+                    }
+                },
+                "type": "object"
+            },
+            "TokenResponse": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "example": true
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "عملیات با موفقیت انجام شد"
+                    },
+                    "token": {
+                        "type": "string",
+                        "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
+                    }
+                },
+                "type": "object"
+            },
+            "ErrorResponse": {
+                "properties": {
+                    "status": {
+                        "type": "boolean",
+                        "example": false
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "پیام خطا"
+                    }
+                },
+                "type": "object"
+            },
+            "UserProfileResponse": {
+                "properties": {
+                    "user": {
+                        "$ref": "#/components/schemas/User"
+                    },
+                    "message": {
+                        "type": "string",
+                        "example": "پروفایل کاربر با موفقیت دریافت شد"
+                    },
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "status": {
+                        "type": "boolean",
+                        "example": true
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "احراز هویت",
+            "description": "احراز هویت"
+        },
+        {
+            "name": "کاربر",
+            "description": "کاربر"
+        }
+    ]
+}
