@@ -21,9 +21,9 @@ Route::post("login", [ApiController::class, "login"]);
 
 // مسیرهای محافظت شده - نیاز به احراز هویت دارند
 Route::middleware(['auth:api', 'api.token'])->group(function () {
-    Route::post("refresh-token", [ApiController::class, "refreshToken"]);
+    Route::get("refresh-token", [ApiController::class, "refreshToken"]);
     Route::get("profile", [ApiController::class, "profile"]);
-    Route::post("logout", [ApiController::class, "logout"]);
+    Route::get("logout", [ApiController::class, "logout"]);
     
     // مسیرهای مخصوص مدیر - نیاز به نقش مدیر دارند
     Route::middleware('admin')->group(function () {
