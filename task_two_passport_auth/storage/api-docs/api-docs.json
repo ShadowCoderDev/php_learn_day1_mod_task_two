@@ -34,7 +34,36 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/UserRegisterRequest"
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "محمد حسن"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "Password123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "Password123"
+                                    },
+                                    "role": {
+                                        "type": "string",
+                                        "enum": [
+                                            "admin",
+                                            "user"
+                                        ],
+                                        "example": "user"
+                                    }
+                                },
+                                "type": "object"
                             }
                         }
                     }
@@ -45,7 +74,28 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/SuccessResponse"
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "کاربر با موفقیت ثبت نام شد"
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "type2"
+                                        },
+                                        "user": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -56,21 +106,39 @@
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "داده های ارائه شده نامعتبر است."
+                                            "example": "خطا در اعتبارسنجی"
                                         },
                                         "errors": {
-                                            "properties": {
-                                                "email": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "این ایمیل قبلا ثبت شده است."
-                                                    }
-                                                }
-                                            },
                                             "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "خطای سرور",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "خطا در ثبت نام کاربر"
+                                        },
+                                        "error": {
+                                            "type": "string"
                                         }
                                     },
                                     "type": "object"
@@ -95,28 +163,117 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/LoginRequest"
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "Password123"
+                                    }
+                                },
+                                "type": "object"
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "کاربر با موفقیت وارد شد",
+                        "description": "ورود موفقیت‌آمیز",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/TokenResponse"
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "کاربر با موفقیت وارد شد"
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "type2"
+                                        },
+                                        "user": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
                     "401": {
-                        "description": "غیرمجاز - اطلاعات نامعتبر",
+                        "description": "ورود ناموفق",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ErrorResponse"
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "ایمیل یا رمز عبور نامعتبر است"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "خطای اعتبارسنجی",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "خطا در اعتبارسنجی"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "خطای سرور",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "خطا در ورود به سیستم"
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -134,24 +291,61 @@
                 "operationId": "logoutUser",
                 "responses": {
                     "200": {
-                        "description": "کاربر با موفقیت خارج شد",
+                        "description": "خروج موفقیت‌آمیز",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/SuccessResponse"
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "کاربر با موفقیت خارج شد"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
                     "401": {
-                        "description": "احراز هویت نشده",
+                        "description": "خطای احراز هویت",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "احراز هویت نشده."
+                                            "example": "توکن معتبر نیست یا ارائه نشده است"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "خطای سرور",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "خطا در خروج از سیستم"
+                                        },
+                                        "error": {
+                                            "type": "string"
                                         }
                                     },
                                     "type": "object"
@@ -177,24 +371,72 @@
                 "operationId": "getUserProfile",
                 "responses": {
                     "200": {
-                        "description": "پروفایل کاربر با موفقیت دریافت شد",
+                        "description": "دریافت موفقیت‌آمیز پروفایل",
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/UserProfileResponse"
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "پروفایل کاربر با موفقیت دریافت شد"
+                                        },
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "type2"
+                                        },
+                                        "user": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
                     "401": {
-                        "description": "احراز هویت نشده",
+                        "description": "خطای احراز هویت",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "احراز هویت نشده."
+                                            "example": "توکن معتبر نیست یا ارائه نشده است"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "خطای سرور",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "خطا در دریافت پروفایل"
+                                        },
+                                        "error": {
+                                            "type": "string"
                                         }
                                     },
                                     "type": "object"
@@ -220,15 +462,11 @@
                 "operationId": "refreshToken",
                 "responses": {
                     "200": {
-                        "description": "توکن با موفقیت تازه‌سازی شد",
+                        "description": "تازه‌سازی موفقیت‌آمیز توکن",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
-                                        "token": {
-                                            "type": "string",
-                                            "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
-                                        },
                                         "status": {
                                             "type": "boolean",
                                             "example": true
@@ -236,6 +474,14 @@
                                         "message": {
                                             "type": "string",
                                             "example": "توکن با موفقیت تازه‌سازی شد"
+                                        },
+                                        "token": {
+                                            "type": "string",
+                                            "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
+                                        },
+                                        "type": {
+                                            "type": "string",
+                                            "example": "type2"
                                         }
                                     },
                                     "type": "object"
@@ -244,14 +490,41 @@
                         }
                     },
                     "401": {
-                        "description": "احراز هویت نشده",
+                        "description": "خطای احراز هویت",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
                                         "message": {
                                             "type": "string",
-                                            "example": "احراز هویت نشده."
+                                            "example": "توکن معتبر نیست یا ارائه نشده است"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "خطای سرور",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "خطا در تازه‌سازی توکن"
+                                        },
+                                        "error": {
+                                            "type": "string"
                                         }
                                     },
                                     "type": "object"
@@ -269,160 +542,6 @@
         }
     },
     "components": {
-        "schemas": {
-            "User": {
-                "required": [
-                    "name",
-                    "email",
-                    "password"
-                ],
-                "properties": {
-                    "id": {
-                        "description": "شناسه کاربر",
-                        "type": "integer",
-                        "format": "int64"
-                    },
-                    "name": {
-                        "description": "نام کاربر",
-                        "type": "string"
-                    },
-                    "email": {
-                        "description": "ایمیل کاربر",
-                        "type": "string",
-                        "format": "email"
-                    },
-                    "created_at": {
-                        "description": "تاریخ ایجاد",
-                        "type": "string",
-                        "format": "date-time"
-                    },
-                    "updated_at": {
-                        "description": "تاریخ آخرین بروزرسانی",
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                },
-                "type": "object"
-            },
-            "UserRegisterRequest": {
-                "required": [
-                    "name",
-                    "email",
-                    "password",
-                    "password_confirmation"
-                ],
-                "properties": {
-                    "name": {
-                        "description": "نام کاربر",
-                        "type": "string",
-                        "example": "محمد حسن"
-                    },
-                    "email": {
-                        "description": "ایمیل کاربر",
-                        "type": "string",
-                        "format": "email",
-                        "example": "user@example.com"
-                    },
-                    "password": {
-                        "description": "رمز عبور کاربر",
-                        "type": "string",
-                        "format": "password",
-                        "example": "Password123"
-                    },
-                    "password_confirmation": {
-                        "description": "تایید رمز عبور",
-                        "type": "string",
-                        "format": "password",
-                        "example": "Password123"
-                    }
-                },
-                "type": "object"
-            },
-            "LoginRequest": {
-                "required": [
-                    "email",
-                    "password"
-                ],
-                "properties": {
-                    "email": {
-                        "description": "ایمیل کاربر",
-                        "type": "string",
-                        "format": "email",
-                        "example": "user@example.com"
-                    },
-                    "password": {
-                        "description": "رمز عبور کاربر",
-                        "type": "string",
-                        "format": "password",
-                        "example": "Password123"
-                    }
-                },
-                "type": "object"
-            },
-            "SuccessResponse": {
-                "properties": {
-                    "status": {
-                        "type": "boolean",
-                        "example": true
-                    },
-                    "message": {
-                        "type": "string",
-                        "example": "عملیات با موفقیت انجام شد"
-                    }
-                },
-                "type": "object"
-            },
-            "TokenResponse": {
-                "properties": {
-                    "status": {
-                        "type": "boolean",
-                        "example": true
-                    },
-                    "message": {
-                        "type": "string",
-                        "example": "عملیات با موفقیت انجام شد"
-                    },
-                    "token": {
-                        "type": "string",
-                        "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
-                    }
-                },
-                "type": "object"
-            },
-            "ErrorResponse": {
-                "properties": {
-                    "status": {
-                        "type": "boolean",
-                        "example": false
-                    },
-                    "message": {
-                        "type": "string",
-                        "example": "پیام خطا"
-                    }
-                },
-                "type": "object"
-            },
-            "UserProfileResponse": {
-                "properties": {
-                    "user": {
-                        "$ref": "#/components/schemas/User"
-                    },
-                    "message": {
-                        "type": "string",
-                        "example": "پروفایل کاربر با موفقیت دریافت شد"
-                    },
-                    "id": {
-                        "type": "integer",
-                        "example": 1
-                    },
-                    "status": {
-                        "type": "boolean",
-                        "example": true
-                    }
-                },
-                "type": "object"
-            }
-        },
         "securitySchemes": {
             "bearerAuth": {
                 "type": "http",

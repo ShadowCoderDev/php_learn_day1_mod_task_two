@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * @OA\Info(
@@ -20,75 +21,16 @@ use Illuminate\Support\Facades\Auth;
  *         url="http://www.apache.org/licenses/LICENSE-2.0.html"
  *     )
  * )
- *
  * @OA\Server(
  *     url=L5_SWAGGER_CONST_HOST,
  *     description="سرور API"
  * )
- * 
  * @OA\SecurityScheme(
  *     securityScheme="bearerAuth",
  *     type="http",
  *     scheme="bearer",
  *     bearerFormat="JWT"
  * )
- *
- * @OA\Schema(
- *     schema="User",
- *     required={"name", "email", "password"},
- *     @OA\Property(property="id", type="integer", format="int64", description="شناسه کاربر"),
- *     @OA\Property(property="name", type="string", description="نام کاربر"),
- *     @OA\Property(property="email", type="string", format="email", description="ایمیل کاربر"),
- *     @OA\Property(property="created_at", type="string", format="date-time", description="تاریخ ایجاد"),
- *     @OA\Property(property="updated_at", type="string", format="date-time", description="تاریخ آخرین بروزرسانی")
- * )
- *
- * @OA\Schema(
- *     schema="UserRegisterRequest",
- *     required={"name", "email", "password", "password_confirmation"},
- *     @OA\Property(property="name", type="string", example="محمد حسن", description="نام کاربر"),
- *     @OA\Property(property="email", type="string", format="email", example="user@example.com", description="ایمیل کاربر"),
- *     @OA\Property(property="password", type="string", format="password", example="Password123", description="رمز عبور کاربر"),
- *     @OA\Property(property="password_confirmation", type="string", format="password", example="Password123", description="تایید رمز عبور")
- * )
- *
- * @OA\Schema(
- *     schema="LoginRequest",
- *     required={"email", "password"},
- *     @OA\Property(property="email", type="string", format="email", example="user@example.com", description="ایمیل کاربر"),
- *     @OA\Property(property="password", type="string", format="password", example="Password123", description="رمز عبور کاربر")
- * )
- *
- * @OA\Schema(
- *     schema="SuccessResponse",
- *     @OA\Property(property="status", type="boolean", example=true),
- *     @OA\Property(property="message", type="string", example="عملیات با موفقیت انجام شد")
- * )
- *
- * @OA\Schema(
- *     schema="TokenResponse",
- *     @OA\Property(property="status", type="boolean", example=true),
- *     @OA\Property(property="message", type="string", example="عملیات با موفقیت انجام شد"),
- *     @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9...")
- * )
- *
- * @OA\Schema(
- *     schema="ErrorResponse",
- *     @OA\Property(property="status", type="boolean", example=false),
- *     @OA\Property(property="message", type="string", example="پیام خطا")
- * )
- *
- * @OA\Schema(
- *     schema="UserProfileResponse",
- *     @OA\Property(property="user", ref="#/components/schemas/User"),
- *     @OA\Property(property="message", type="string", example="پروفایل کاربر با موفقیت دریافت شد"),
- *     @OA\Property(property="id", type="integer", example=1),
- *     @OA\Property(property="status", type="boolean", example=true)
- * )
- *
- * @group احراز هویت کاربر
- *
- * APIs برای احراز هویت کاربر
  */
 class ApiController extends Controller
 {
@@ -102,47 +44,93 @@ class ApiController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         description="اطلاعات ثبت نام کاربر",
-     *         @OA\JsonContent(ref="#/components/schemas/UserRegisterRequest")
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name", type="string", example="محمد حسن"),
+     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="Password123"),
+     *             @OA\Property(property="password_confirmation", type="string", format="password", example="Password123"),
+     *             @OA\Property(property="role", type="string", example="user", enum={"admin", "user"})
+     *         )
      *     ),
      *     @OA\Response(
      *         response=201,
      *         description="کاربر با موفقیت ثبت نام شد",
-     *         @OA\JsonContent(ref="#/components/schemas/SuccessResponse")
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="کاربر با موفقیت ثبت نام شد"),
+     *             @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."),
+     *             @OA\Property(property="type", type="string", example="type2"),
+     *             @OA\Property(property="user", type="object")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=422,
      *         description="خطای اعتبارسنجی",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="داده های ارائه شده نامعتبر است."),
-     *             @OA\Property(
-     *                 property="errors",
-     *                 type="object",
-     *                 @OA\Property(property="email", type="array", @OA\Items(type="string", example="این ایمیل قبلا ثبت شده است."))
-     *             )
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="خطا در اعتبارسنجی"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="خطای سرور",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="خطا در ثبت نام کاربر"),
+     *             @OA\Property(property="error", type="string")
      *         )
      *     )
      * )
      */
     public function register(Request $request){
-       
-        // validation
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-        // User
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => bcrypt($request->password),
-        ]);
-        // response
-        return response()->json([
-            'status' => true,
-            'message' => 'کاربر با موفقیت ثبت نام شد'],
-            201
-        );
+        try {
+            // اعتبارسنجی با Validator
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8|confirmed',
+                'role' => 'sometimes|in:admin,user'
+            ]);
+            
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'خطا در اعتبارسنجی',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
+            // ایجاد کاربر جدید
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => $request->role ?? 'user',
+            ]);
+            
+            // ایجاد توکن
+            $token = $user->createToken("myToken")->accessToken;
+            
+            // تعیین نوع کاربر بر اساس نقش
+            $type = ($user->role === 'admin') ? 'type1' : 'type2';
+            
+            // ارسال پاسخ
+            return response()->json([
+                'status' => true,
+                'message' => 'کاربر با موفقیت ثبت نام شد',
+                'token' => $token,
+                'type' => $type,
+                'user' => $user
+            ], 201);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'خطا در ثبت نام کاربر',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -155,60 +143,94 @@ class ApiController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         description="اطلاعات ورود کاربر",
-     *         @OA\JsonContent(ref="#/components/schemas/LoginRequest")
+     *         @OA\JsonContent(
+     *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
+     *             @OA\Property(property="password", type="string", format="password", example="Password123")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="کاربر با موفقیت وارد شد",
-     *         @OA\JsonContent(ref="#/components/schemas/TokenResponse")
+     *         description="ورود موفقیت‌آمیز",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="کاربر با موفقیت وارد شد"),
+     *             @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."),
+     *             @OA\Property(property="type", type="string", example="type2"),
+     *             @OA\Property(property="user", type="object")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=401,
-     *         description="غیرمجاز - اطلاعات نامعتبر",
-     *         @OA\JsonContent(ref="#/components/schemas/ErrorResponse")
+     *         description="ورود ناموفق",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="ایمیل یا رمز عبور نامعتبر است")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="خطای اعتبارسنجی",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="خطا در اعتبارسنجی"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="خطای سرور",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="خطا در ورود به سیستم"),
+     *             @OA\Property(property="error", type="string")
+     *         )
      *     )
      * )
      */
     public function login(Request $request){
-        // validation
-        $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
-        // check user by "email" value  
-        $user = User::where("email", $request->email)->first();
-        if (!empty($user)){
-            if (Hash::check($request->password, $user->password))
-            {
+        try {
+            // اعتبارسنجی درخواست
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|string|email',
+                'password' => 'required|string',
+            ]);
+            
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'خطا در اعتبارسنجی',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
+            // روش اول: استفاده از Auth::attempt
+            if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+                $user = Auth::user();
                 $token = $user->createToken("myToken")->accessToken;
+                $type = ($user->role === 'admin') ? 'type1' : 'type2';
+                
                 return response()->json([
                     "status" => true,
                     "message" => "کاربر با موفقیت وارد شد",
-                    "token" => $token
+                    "token" => $token,
+                    "type" => $type,
+                    "user" => $user
                 ]);
             }
-            else{
-                return response()->json([
-                    "status" => false,
-                    "message" => "رمز عبور مطابقت ندارد"
-                ])->setStatusCode(401);
-               
-            }
-        }else{
+            
+            // اگر Auth::attempt ناموفق بود، پیام خطا را نمایش می‌دهیم
             return response()->json([
                 "status" => false,
-                "message" => "ایمیل نامعتبر است"
-            ])->setStatusCode(401);
+                "message" => "ایمیل یا رمز عبور نامعتبر است"
+            ], 401);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'خطا در ورود به سیستم',
+                'error' => $e->getMessage()
+            ], 500);
         }
-        
-        if (auth()->attempt($request->only('email', 'password'))) {
-            $user = auth()->user();
-            $token = $user->createToken('Personal Access Token')->accessToken;
-            return response()->json(['token' => $token], 200);
-        }
-       
-        // return response
-        return response()->json(['error' => 'غیرمجاز'], 401);
     }
 
     /**
@@ -221,25 +243,56 @@ class ApiController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\Response(
      *         response=200,
-     *         description="کاربر با موفقیت خارج شد",
-     *         @OA\JsonContent(ref="#/components/schemas/SuccessResponse")
+     *         description="خروج موفقیت‌آمیز",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="کاربر با موفقیت خارج شد")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=401,
-     *         description="احراز هویت نشده",
+     *         description="خطای احراز هویت",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="احراز هویت نشده.")
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="توکن معتبر نیست یا ارائه نشده است")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="خطای سرور",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="خطا در خروج از سیستم"),
+     *             @OA\Property(property="error", type="string")
      *         )
      *     )
      * )
      */
-    public function logout(){
-        $user = auth()->user();
-        $user->token()->revoke();
-        return response()->json([
-            'message' => 'کاربر با موفقیت خارج شد',
-            'status' => true,
-        ], 200);
+    public function logout(Request $request){
+        try {
+            // بررسی احراز هویت کاربر
+            if (!auth()->check()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'توکن معتبر نیست یا ارائه نشده است'
+                ], 401);
+            }
+            
+            $user = auth()->user();
+            $user->token()->revoke();
+            
+            return response()->json([
+                'status' => true,
+                'message' => 'کاربر با موفقیت خارج شد'
+            ], 200);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'خطا در خروج از سیستم',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -252,27 +305,65 @@ class ApiController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\Response(
      *         response=200,
-     *         description="پروفایل کاربر با موفقیت دریافت شد",
-     *         @OA\JsonContent(ref="#/components/schemas/UserProfileResponse")
+     *         description="دریافت موفقیت‌آمیز پروفایل",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="پروفایل کاربر با موفقیت دریافت شد"),
+     *             @OA\Property(property="id", type="integer", example=1),
+     *             @OA\Property(property="type", type="string", example="type2"),
+     *             @OA\Property(property="user", type="object")
+     *         )
      *     ),
      *     @OA\Response(
      *         response=401,
-     *         description="احراز هویت نشده",
+     *         description="خطای احراز هویت",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="احراز هویت نشده.")
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="توکن معتبر نیست یا ارائه نشده است")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="خطای سرور",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="خطا در دریافت پروفایل"),
+     *             @OA\Property(property="error", type="string")
      *         )
      *     )
      * )
      */
-    public function profile(){
-        // get user
-        $user = auth()->user();
-        return response()->json([
-            'user' => $user,
-            'message' => 'پروفایل کاربر با موفقیت دریافت شد',
-            'id' => $user->id,
-            'status' => true,
-        ])->setStatusCode(200);
+    public function profile(Request $request){
+        try {
+            // بررسی احراز هویت کاربر
+            if (!auth()->check()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'توکن معتبر نیست یا ارائه نشده است'
+                ], 401);
+            }
+            
+            // دریافت کاربر
+            $user = auth()->user();
+            
+            // تعیین نوع کاربر بر اساس نقش
+            $type = ($user->role === 'admin') ? 'type1' : 'type2';
+            
+            return response()->json([
+                'status' => true,
+                'message' => 'پروفایل کاربر با موفقیت دریافت شد',
+                'id' => $user->id,
+                'type' => $type,
+                'user' => $user
+            ], 200);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'خطا در دریافت پروفایل',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -285,29 +376,62 @@ class ApiController extends Controller
      *     security={{"bearerAuth":{}}},
      *     @OA\Response(
      *         response=200,
-     *         description="توکن با موفقیت تازه‌سازی شد",
+     *         description="تازه‌سازی موفقیت‌آمیز توکن",
      *         @OA\JsonContent(
-     *             @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."),
      *             @OA\Property(property="status", type="boolean", example=true),
-     *             @OA\Property(property="message", type="string", example="توکن با موفقیت تازه‌سازی شد")
+     *             @OA\Property(property="message", type="string", example="توکن با موفقیت تازه‌سازی شد"),
+     *             @OA\Property(property="token", type="string", example="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."),
+     *             @OA\Property(property="type", type="string", example="type2")
      *         )
      *     ),
      *     @OA\Response(
      *         response=401,
-     *         description="احراز هویت نشده",
+     *         description="خطای احراز هویت",
      *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="احراز هویت نشده.")
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="توکن معتبر نیست یا ارائه نشده است")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="خطای سرور",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="status", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="خطا در تازه‌سازی توکن"),
+     *             @OA\Property(property="error", type="string")
      *         )
      *     )
      * )
      */
-    public function refreshToken(){
-        $user = auth()->user();
-        $token = $user->createToken('Personal Access Token')->accessToken;
-        return response()->json([
-            'token' => $token,
-            'status' => true,
-            'message' => 'توکن با موفقیت تازه‌سازی شد',
-        ], 200);
+    public function refreshToken(Request $request){
+        try {
+            // بررسی احراز هویت کاربر
+            if (!auth()->check()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'توکن معتبر نیست یا ارائه نشده است'
+                ], 401);
+            }
+            
+            $user = auth()->user();
+            $token = $user->createToken('myToken')->accessToken;
+            
+            // تعیین نوع کاربر بر اساس نقش
+            $type = ($user->role === 'admin') ? 'type1' : 'type2';
+            
+            return response()->json([
+                'status' => true,
+                'message' => 'توکن با موفقیت تازه‌سازی شد',
+                'token' => $token,
+                'type' => $type
+            ], 200);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'خطا در تازه‌سازی توکن',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }
