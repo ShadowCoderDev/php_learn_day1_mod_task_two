@@ -1,11 +1,10 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Passport\HasApiTokens;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
@@ -20,7 +19,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'role',
     ];
 
     /**
@@ -42,14 +40,107 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-    
+
     /**
-     * Check if user is admin
-     *
-     * @return bool
+     * رابطه چند به چند کاربر با نقش‌ها
      */
-    public function isAdmin()
+    public function roles()
     {
-        return $this->role === 'admin';
+        return $this->belongsToMany(Role::class);
+    }
+
+    /**
+     * بررسی اینکه آیا کاربر دارای یک نقش خاص است یا خیر
+     */
+    public function hasRole($role)
+    {
+        if (is_string($role)) {
+            return $this->roles->contains('name', $role);
+        }
+
+        return (bool)$role->intersect($this->roles)->count();
+    }
+
+    /**
+     * بررسی اینکه آیا کاربر دارای چند نقش است یا خیر
+     */
+    public function hasRoles($roles)
+    {
+        if (is_array($roles)) {
+            foreach ($roles as $role) {
+                if ($this->hasRole($role)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        return $this->hasRole($roles);
+    }
+
+    /**
+     * افزودن نقش به کاربر
+     */
+    public function assignRole($role)
+    {
+        if (is_string($role)) {
+            $role = Role::where('name', $role)->firstOrFail();
+        }
+
+        $this->roles()->syncWithoutDetaching($role);
+
+        return $this;
+    }
+
+    /**
+     * حذف نقش از کاربر
+     */
+    public function removeRole($role)
+    {
+        if (is_string($role)) {
+            $role = Role::where('name', $role)->firstOrFail();
+        }
+
+        $this->roles()->detach($role);
+
+        return $this;
+    }
+
+    /**
+     * بررسی اینکه آیا کاربر دارای مجوز خاصی است یا خیر
+     */
+    public function hasPermission($permission)
+    {
+        if (is_string($permission)) {
+            $permission = Permission::where('name', $permission)->first();
+            if (!$permission) {
+                return false;
+            }
+        }
+
+        foreach ($this->roles as $role) {
+            if ($role->permissions->contains('id', $permission->id)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * بررسی اینکه آیا کاربر دارای چند مجوز است یا خیر
+     */
+    public function hasPermissions($permissions)
+    {
+        if (is_array($permissions)) {
+            foreach ($permissions as $permission) {
+                if ($this->hasPermission($permission)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        return $this->hasPermission($permissions);
     }
 }

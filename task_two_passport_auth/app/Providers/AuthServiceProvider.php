@@ -4,7 +4,9 @@ namespace App\Providers;
 
 // use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-
+use Illuminate\Support\Facades\Gate;
+use App\Models\User;
+use App\Models\Permission;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -14,7 +16,7 @@ class AuthServiceProvider extends ServiceProvider
      * @var array<class-string, class-string>
      */
     protected $policies = [
-        // 'App\Models\Model' => 'App\Policies\ModelPolicy',
+        //
     ];
 
     /**
@@ -22,8 +24,32 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        $this->registerPolicies();
+        // ثبت gates برای همه مجوزها
+        $this->registerPermissions();
 
-        //
+        // تعریف گیت برای چک کردن نقش ادمین
+        Gate::define('admin', function (User $user) {
+            return $user->hasRole('admin');
+        });
+    }
+
+    /**
+     * ثبت همه مجوزها به عنوان Gates
+     */
+    protected function registerPermissions()
+    {
+        try {
+            // دریافت همه مجوزها از دیتابیس
+            $permissions = Permission::all();
+
+            foreach ($permissions as $permission) {
+                Gate::define($permission->name, function (User $user) use ($permission) {
+                    return $user->hasPermission($permission);
+                });
+            }
+        } catch (\Exception $e) {
+            // ممکن است جدول هنوز وجود نداشته باشد (در هنگام مایگریشن اولیه)
+            report($e);
+        }
     }
 }
